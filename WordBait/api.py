@@ -165,13 +165,13 @@ class WordBaitAPI(remote.Service):
         game = get_by_urlsafe(request.urlsafe_game_key, Game)
         return game.cancel()
 
-    @endpoints.method(response_message=StringMessage,
-                      path='high/scores',
-                      name='get_high_scores',
-                      http_method='GET')
-    def get_high_scores(self, request):
-        """Return all high scores"""
-        return StringMessage(items=[score.to_form() for score in Score.query()])
+    # Not needed because of two player game
+    # @endpoints.method(response_message=StringMessage,
+    #                   path='high/scores',
+    #                   name='get_high_scores',
+    #                   http_method='GET')
+    # def get_high_scores(self, request):
+    #     """Return all high scores"""
 
     @endpoints.method(response_message=StringMessage,
                       path='rank',

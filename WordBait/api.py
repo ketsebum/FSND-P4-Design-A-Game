@@ -13,7 +13,7 @@ from google.appengine.api import taskqueue
 
 from models import User, Game, Score
 from models import StringMessage, NewGameForm, GameForm, MakeMoveForm,\
-    ScoreForms, GameForms
+    ScoreForms, GameForms, Leaderboard, LeaderboardForm, LeaderboardForms
 from utils import get_by_urlsafe, get_user
 
 NEW_GAME_REQUEST = endpoints.ResourceContainer(NewGameForm)
@@ -43,6 +43,8 @@ class WordBaitAPI(remote.Service):
                     'A User with that name already exists!')
         user = User(name=request.user_name, email=request.email)
         user.put()
+        leaderboard = Leaderboard(user=user.key, wins=0, losses=0)
+        leaderboard.put()
         return StringMessage(message='User {} created!'.format(
                 request.user_name))
 
@@ -173,13 +175,13 @@ class WordBaitAPI(remote.Service):
     # def get_high_scores(self, request):
     #     """Return all high scores"""
 
-    @endpoints.method(response_message=StringMessage,
+    @endpoints.method(response_message=LeaderboardForms,
                       path='rank',
                       name='get_user_rankings',
                       http_method='GET')
     def get_user_rankings(self, request):
         """Return all rank"""
-        return StringMessage(items=[score.to_form() for score in Score.query()])
+        return Leaderboard.query().get().current_rankings()
 
     @endpoints.method(response_message=StringMessage,
                       path='history',

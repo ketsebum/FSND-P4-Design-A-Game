@@ -105,21 +105,32 @@ class Game(ndb.Model):
         self.date = date.today()
         returnString = ""
 
+        user_one_board = Leaderboard.query(Leaderboard.user == self.user_one).get()
+        user_two_board = Leaderboard.query(Leaderboard.user == self.user_two).get()
+
         if self.target == final_word:
             if self.user_one == player:
                 self.winner = self.user_one
+                user_one_board.adjust_record(1)
                 self.loser = self.user_two
+                user_two_board.adjust_record(-1)
             else:
                 self.winner = self.user_two
+                user_two_board.adjust_record(1)
                 self.loser = self.user_one
+                user_one_board.adjust_record(-1)
             returnString = "You win!"
         else:
             if self.user_one == player:
                 self.winner = self.user_two
+                user_two_board.adjust_record(1)
                 self.loser = self.user_one
+                user_one_board.adjust_record(-1)
             else:
                 self.winner = self.user_one
+                user_one_board.adjust_record(1)
                 self.loser = self.user_two
+                user_two_board.adjust_record(-1)
             returnString = "You lose!"
         self.put()
         return self.to_form(returnString)
@@ -135,6 +146,26 @@ class Game(ndb.Model):
             self.turn = self.user_one
         self.put()
 
+class Leaderboard(ndb.Model):
+    """Leaderboard object"""
+    user = ndb.KeyProperty(required=True, kind='User')
+    wins = ndb.IntegerProperty(required=True)
+    losses = ndb.IntegerProperty(required=True)
+
+    def adjust_record(self, adjustment):
+        """Adjusts a users record"""
+        if adjustment > 0:
+            self.wins = self.wins + 1
+        else:
+            self.losses = self.losses + 1
+        self.put()
+
+    def current_rankings(self):
+        ranking = Leaderboard.query().order(-Leaderboard.wins)
+        return LeaderboardForms(items=[rank.to_form() for rank in ranking])
+    
+    def to_form(self):
+        return LeaderboardForm(user = self.user.get().name, wins = self.wins, losses = self.losses)
 
 class Score(ndb.Model):
     """Score object"""
@@ -147,6 +178,15 @@ class Score(ndb.Model):
         return ScoreForm(winner_name=self.winner.get().name, loser_name=self.loser.get().name,
                          date=str(self.date), rounds=self.rounds)
 
+class LeaderboardForm(messages.Message):
+    """LeaderboardForm for outbound game Leaderboard information"""
+    user = messages.StringField(1, required=True)
+    wins = messages.IntegerField(2, required=True)
+    losses = messages.IntegerField(3, required=True)
+
+class LeaderboardForms(messages.Message):
+    """Return multiple LeaderboardForms"""
+    items = messages.MessageField(LeaderboardForm, 1, repeated=True)
 
 class GameForm(messages.Message):
     """GameForm for outbound game state information"""

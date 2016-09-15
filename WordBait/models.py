@@ -2,7 +2,7 @@
 entities used by the Game. Because these classes are also regular Python
 classes they can include methods (such as 'to_form' and 'new_game')."""
 
-# This isn't working because of Python rules listed:
+# This import isn't working because of Python rules listed:
 # https://cloud.google.com/appengine/kb/?csw=1#libraries
 # Install a library that can do proper word validation
 # from google.appengine.ext import vendor
@@ -27,9 +27,13 @@ class Game(ndb.Model):
     target = ndb.StringProperty(required=True)
     current_round = ndb.IntegerProperty(required=True, default=1)
     game_over = ndb.BooleanProperty(required=True, default=False)
+    cancelled = ndb.BooleanProperty(required=True, default=False)
     turn = ndb.KeyProperty(required=True, kind='User')
     user_one = ndb.KeyProperty(required=True, kind='User')
     user_two = ndb.KeyProperty(required=True, kind='User')
+    date = ndb.DateProperty(required=False)
+    winner = ndb.KeyProperty(required=False, kind='User')
+    loser = ndb.KeyProperty(required=False, kind='User')
 
     @classmethod
     def new_game(cls, user_one, word):
@@ -78,6 +82,19 @@ class Game(ndb.Model):
         form.message = message
         form.bait = self.target[:self.current_round]
         return form
+    
+    def cancel(self):
+        if self.game_over:
+            return StringMessage(message="Game already finished, not able to cancel!")
+        else:
+            self.cancelled = True
+            self.put()
+            return StringMessage(message="Cancelled Successfully!")
+
+
+    def to_score_form(self):
+        return ScoreForm(winner_name=self.winner.get().name, loser_name=self.loser.get().name,
+                         date=str(self.date), rounds=self.current_round)
 
     def end_game(self, player, final_word):
         """Ends the game - Winner is the user that won - loser is the opposite,
@@ -85,25 +102,27 @@ class Game(ndb.Model):
 
         # Ending the game
         self.game_over = True
-        self.put()
+        self.date = date.today()
+        returnString = ""
+
         if self.target == final_word:
             if self.user_one == player:
-                score = Score(winner=self.user_one, loser=self.user_two, date=date.today(),
-                              rounds=self.current_round)
+                self.winner = self.user_one
+                self.loser = self.user_two
             else:
-                score = Score(winner=self.user_two, loser=self.user_one, date=date.today(),
-                              rounds=self.current_round)
-            score.put()
-            return self.to_form("You win!")
+                self.winner = self.user_two
+                self.loser = self.user_one
+            returnString = "You win!"
         else:
             if self.user_one == player:
-                score = Score(winner=self.user_two, loser=self.user_one, date=date.today(),
-                              rounds=self.current_round)
+                self.winner = self.user_two
+                self.loser = self.user_one
             else:
-                score = Score(winner=self.user_one, loser=self.user_two, date=date.today(),
-                              rounds=self.current_round)
-            score.put()
-            return self.to_form("You lose!")
+                self.winner = self.user_one
+                self.loser = self.user_two
+            returnString = "You lose!"
+        self.put()
+        return self.to_form(returnString)
 
     def make_move(self, word):
         """Makes a move"""

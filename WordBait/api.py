@@ -14,7 +14,7 @@ from google.appengine.api import taskqueue
 from models import User, Game, Score
 from models import StringMessage, NewGameForm, GameForm, MakeMoveForm,\
     ScoreForms, GameForms
-from utils import get_by_urlsafe
+from utils import get_by_urlsafe, get_user
 
 NEW_GAME_REQUEST = endpoints.ResourceContainer(NewGameForm)
 GET_GAME_REQUEST = endpoints.ResourceContainer(
@@ -52,15 +52,12 @@ class WordBaitAPI(remote.Service):
                       http_method='POST')
     def new_game(self, request):
         """Creates new game"""
-        user = User.query(User.name == request.user_name).get()
-        if not user:
-            raise endpoints.NotFoundException(
-                    'A User with that name does not exist!')
+        user = get_user(request.user_name)
+
         try:
             game = Game.new_game(user.key, request.word)
         except ValueError:
-            raise endpoints.BadRequestException('Maximum must be greater '
-                                                'than minimum!')
+            raise endpoints.BadRequestException('Minimum word length must be greater than 4!')
 
         # Use a task queue to update the average current_round remaining.
         # This operation is not needed to complete the creation of a new game
@@ -88,18 +85,21 @@ class WordBaitAPI(remote.Service):
                       http_method='PUT')
     def make_move(self, request):
         """Makes a move. Returns a game state with message"""
+        # Game being played & User playing
         game = get_by_urlsafe(request.urlsafe_game_key, Game)
+        user = get_user(request.user_name)
+
+        # Not valid attempts on the game
         if game.game_over:
             return game.to_form('Game already over!')
+        if game.turn != user.key:
+            return game.to_form('Not your turn!')
 
-        if request.word == game.target:
-            game.end_game(True)
-            return game.to_form('You win!')
+        # Checking Win Condition
+        if request.final_guess:
+            return game.end_game(user.key, request.word)
         else:
-            game.current_round += 1
-            game.target = request.word
-            game.put()
-            return game.to_form("Sorry! Not quite!")
+            return game.make_move(request.word)
 
     @endpoints.method(response_message=ScoreForms,
                       path='scores',
@@ -116,12 +116,12 @@ class WordBaitAPI(remote.Service):
                       http_method='GET')
     def get_user_scores(self, request):
         """Returns all of an individual User's scores"""
-        user = User.query(User.name == request.user_name).get()
-        if not user:
-            raise endpoints.NotFoundException(
-                    'A User with that name does not exist!')
-        scores = Score.query(Score.user == user.key)
-        return ScoreForms(items=[score.to_form() for score in scores])
+        user = get_user(request.user_name)
+
+        wins = Score.query(Score.winner == user.key).fetch()
+        losses = Score.query(Score.loser == user.key).fetch()
+        record = wins + losses
+        return ScoreForms(items=[score.to_form() for score in record])
 
     @endpoints.method(response_message=StringMessage,
                       path='games/average_rounds',
@@ -131,18 +131,27 @@ class WordBaitAPI(remote.Service):
         """Get the cached average moves remaining"""
         return StringMessage(message=memcache.get(MEMCACHE_MOVES_REMAINING) or '')
 
+    @endpoints.method(response_message=GameForms,
+                      path='games',
+                      name='get_games',
+                      http_method='GET')
+    def get_games(self, request):
+        """Return all games"""
+        games = Game.query()
+        return GameForms(items=[game.to_form('Games') for game in games])
+
     @endpoints.method(request_message=USER_REQUEST,
                       response_message=GameForms,
                       path='games/active/{user_name}',
                       name='get_user_games',
                       http_method='GET')
     def get_user_games(self, request):
-        """Return all active games"""
-        user = User.query(User.name == request.user_name).get()
-        if not user:
-            raise endpoints.NotFoundException(
-                    'A User with that name does not exist!')
-        games = Game.query(Game.user == user.key, Game.game_over == False)
+        """Return all active games for specified user"""
+        user = get_user(request.user_name)
+
+        games_one = Game.query(Game.user_one == user.key, Game.game_over == False).fetch()
+        games_two = Game.query(Game.user_two == user.key, Game.game_over == False).fetch()
+        games = games_one + games_two
         return GameForms(items=[game.to_form('Games') for game in games])
 
     @endpoints.method(response_message=StringMessage,
@@ -188,6 +197,5 @@ class WordBaitAPI(remote.Service):
             average = float(total_current_round)/count
             memcache.set(MEMCACHE_MOVES_REMAINING,
                          'The average moves remaining is {:.2f}'.format(average))
-
 
 api = endpoints.api_server([WordBaitAPI])

@@ -1,0 +1,6 @@
+// Place your settings in this file to overwrite the default settings
+{
+    "python.autoComplete.extraPaths": [
+    "/home/ketse/Documents/google_appengine",
+    "/home/ketse/Documents/google_appengine/lib" ]
+}

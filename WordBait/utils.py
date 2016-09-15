@@ -1,5 +1,6 @@
 """utils.py - File for collecting general utility functions."""
 
+from models import User, Game, Score
 import logging
 from google.appengine.ext import ndb
 import endpoints
@@ -33,3 +34,10 @@ def get_by_urlsafe(urlsafe, model):
     if not isinstance(entity, model):
         raise ValueError('Incorrect Kind')
     return entity
+
+def get_user(request):
+    user = User.query(User.name == request).get()
+    if not user:
+        raise endpoints.NotFoundException(
+                'A User with that name does not exist!')
+    return user

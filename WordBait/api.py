@@ -11,9 +11,9 @@ from protorpc import remote, messages
 from google.appengine.api import memcache
 from google.appengine.api import taskqueue
 
-from models import User, Game, Score
+from models import User, Game, Score, GameHistory
 from models import StringMessage, NewGameForm, GameForm, MakeMoveForm,\
-    ScoreForms, GameForms, Leaderboard, LeaderboardForm, LeaderboardForms
+    ScoreForms, GameForms, Leaderboard, LeaderboardForm, LeaderboardForms, GameHistoryForm, GameHistoryForms
 from utils import get_by_urlsafe, get_user
 
 NEW_GAME_REQUEST = endpoints.ResourceContainer(NewGameForm)
@@ -157,7 +157,7 @@ class WordBaitAPI(remote.Service):
         games = games_one + games_two
         return GameForms(items=[game.to_form('Games') for game in games])
 
-    @endpoints.method(request_message=GAME_URL,
+    @endpoints.method(request_message=GET_GAME_REQUEST,
                       response_message=StringMessage,
                       path='cancel/{urlsafe_game_key}',
                       name='cancel_game',
@@ -183,13 +183,15 @@ class WordBaitAPI(remote.Service):
         """Return all rank"""
         return Leaderboard.query().get().current_rankings()
 
-    @endpoints.method(response_message=StringMessage,
-                      path='history',
+    @endpoints.method(request_message=GET_GAME_REQUEST,
+                      response_message=GameHistoryForms,
+                      path='history/{urlsafe_game_key}',
                       name='get_game_history',
                       http_method='GET')
     def get_game_history(self, request):
         """Return all history"""
-        return StringMessage(items=[score.to_form() for score in Score.query()])
+        game = get_by_urlsafe(request.urlsafe_game_key, Game)
+        return game.history()
 
     @staticmethod
     def _cache_average_rounds():

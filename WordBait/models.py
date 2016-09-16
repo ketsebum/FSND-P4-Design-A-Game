@@ -100,6 +100,9 @@ class Game(ndb.Model):
         """Ends the game - Winner is the user that won - loser is the opposite,
         player"""
 
+        record = GameHistory(game=self.key, target=self.target, move=final_word, user=self.turn, final_guess=True, round=self.current_round)
+        record.put()
+
         # Ending the game
         self.game_over = True
         self.date = date.today()
@@ -138,6 +141,8 @@ class Game(ndb.Model):
     def make_move(self, word):
         """Makes a move"""
         # Advancing the round, updating the word, and updating the user
+        record = GameHistory(game=self.key, target=self.target, move=word, user=self.turn, final_guess=False, round=self.current_round)
+        record.put()
         self.current_round += 1
         self.target = word
         if self.turn == self.user_one:
@@ -145,6 +150,12 @@ class Game(ndb.Model):
         else:
             self.turn = self.user_one
         self.put()
+        return self.to_form("Nice one!")
+
+    def history(self):
+        """Grab the history for this game"""
+        history = GameHistory.query(GameHistory.game == self.key).fetch()
+        return GameHistoryForms(items=[ref.to_form() for ref in history])
 
 class Leaderboard(ndb.Model):
     """Leaderboard object"""
@@ -152,6 +163,7 @@ class Leaderboard(ndb.Model):
     wins = ndb.IntegerProperty(required=True)
     losses = ndb.IntegerProperty(required=True)
 
+    @classmethod
     def adjust_record(self, adjustment):
         """Adjusts a users record"""
         if adjustment > 0:
@@ -166,6 +178,18 @@ class Leaderboard(ndb.Model):
     
     def to_form(self):
         return LeaderboardForm(user = self.user.get().name, wins = self.wins, losses = self.losses)
+
+class GameHistory(ndb.Model):
+    """GameHistory object"""
+    game = ndb.KeyProperty(required=True, kind='Game')
+    target = ndb.StringProperty(required=True)
+    move = ndb.StringProperty(required=True)
+    user = ndb.KeyProperty(required=True, kind='User')
+    final_guess = ndb.BooleanProperty(required=True)
+    round = ndb.IntegerProperty(required=True)
+
+    def to_form(self):
+        return GameHistoryForm(user=self.user.get().name, target=self.target, final_guess=self.final_guess, move=self.move, round=self.round)
 
 class Score(ndb.Model):
     """Score object"""
@@ -187,6 +211,18 @@ class LeaderboardForm(messages.Message):
 class LeaderboardForms(messages.Message):
     """Return multiple LeaderboardForms"""
     items = messages.MessageField(LeaderboardForm, 1, repeated=True)
+
+class GameHistoryForm(messages.Message):
+    """GameForm for outbound game state information"""
+    user = messages.StringField(1, required=True)
+    target = messages.StringField(2, required=True)
+    final_guess = messages.BooleanField(3, required=True)
+    move = messages.StringField(4, required=True)
+    round = messages.IntegerField(5, required=True)
+
+class GameHistoryForms(messages.Message):
+    """Return multiple GameHistoryForms"""
+    items = messages.MessageField(GameHistoryForm, 1, repeated=True)
 
 class GameForm(messages.Message):
     """GameForm for outbound game state information"""

@@ -1,24 +1,55 @@
-#Full Stack Nanodegree Project 4 Refresh
-
-## Set-Up Instructions:
-1.  Update the value of application in app.yaml to the app ID you have registered
- in the App Engine admin console and would like to use to host your instance of this sample.
-1.  Run the app with the devserver using dev_appserver.py DIR, and ensure it's
- running by visiting the API Explorer - by default localhost:8080/_ah/api/explorer.
-1.  (Optional) Generate your client library(ies) with the endpoints tool.
- Deploy your application.
- 
- 
- 
 ##Game Description:
-Guess a number is a simple guessing game. Each game begins with a random 'target'
-number between the minimum and maximum values provided, and a maximum number of
-'attempts'. 'Guesses' are sent to the `make_move` endpoint which will reply
-with either: 'too low', 'too high', 'you win', or 'game over' (if the maximum
-number of attempts is reached).
-Many different Guess a Number games can be played by many different Users at any
-given time. Each game can be retrieved or played by using the path parameter
-`urlsafe_game_key`.
+WORD BAIT
+----------------
+- opponents enter words and try to guess each other's word
+- only the next letter is submitted for each word
+- new words built depending on previous letter in sequence submitted by opponent
+
+								HOW TO PLAY
+							--------------------
+- Starting player enters a word
+- First letter of word is displayed for other player
+- Other player chooses to "Guess Word" or "Enter New Word" using the Letter(s) displayed
+- If player chooses to "Guess Word", he must enter the word with correct spelling
+  - if wrong, loses round
+  - if right, wins round
+- If player chooses to "Enter New Word", he must come up with a new word beginning with the letter or letters displayed, and enter that new word
+- Starting player now gets the same options
+- First player to guess correct word wins
+
+									Example1
+								------------
+Player1: Enters "Sample"
+Displayed: S
+Player2: Enters "Song"
+Displayed: S-O
+Player1: Enters "Sound"
+Displayed: S-O-U
+Player2: Guesses "SOUND" and wins 
+									Example2
+								-------------
+Player1: Enters "Time"
+Displayed: T
+Player2: Enters "Torque"
+Displayed: T-O
+Player1: Enters "Toggled"
+Displayed: T-O-G
+Player2: Guesses "TOGGLE" and loses
+
+									FEATURES
+				--------------------------------------------
+- Players must enter word and submit in order for next letter to be displayed
+- Before word is displayed, must enable timer
+  - tap screen to see displayed letters?
+- Players get certain amount of time to complete round, time divided individually
+- Players can choose time limits?
+- turn based? Live game?
+- ability to challenge unguessed word
+  - limited challenges?
+  - does a challenge affect your score?
+- How many points per word?
+  - points based on difficulty?
+- enable/disable use of past, future, plural tenses
 
 ##Files Included:
  - api.py: Contains endpoints and game playing logic.

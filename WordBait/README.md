@@ -71,12 +71,11 @@ Player2: Guesses "TOGGLE" and loses
  - **new_game**
     - Path: 'game'
     - Method: POST
-    - Parameters: user_name, min, max, attempts
+    - Parameters: user_name, word
     - Returns: GameForm with initial game state.
     - Description: Creates a new Game. user_name provided must correspond to an
-    existing user - will raise a NotFoundException if not. Min must be less than
-    max. Also adds a task to a task queue to update the average moves remaining
-    for active games.
+    existing user - will raise a NotFoundException if not. Word must be longer than
+    4 characters long/
      
  - **get_game**
     - Path: 'game/{urlsafe_game_key}'
@@ -88,7 +87,7 @@ Player2: Guesses "TOGGLE" and loses
  - **make_move**
     - Path: 'game/{urlsafe_game_key}'
     - Method: PUT
-    - Parameters: urlsafe_game_key, guess
+    - Parameters: urlsafe_game_key, word, final_guess, user
     - Returns: GameForm with new game state.
     - Description: Accepts a 'guess' and returns the updated state of the game.
     If this causes a game to end, a corresponding Score entity will be created.
@@ -107,14 +106,34 @@ Player2: Guesses "TOGGLE" and loses
     - Returns: ScoreForms. 
     - Description: Returns all Scores recorded by the provided player (unordered).
     Will raise a NotFoundException if the User does not exist.
-    
- - **get_active_game_count**
-    - Path: 'games/active'
+
+- **get_user_rankings**
+    - Path: 'rank'
     - Method: GET
     - Parameters: None
+    - Returns: LeaderboardForms
+    - Description: Gets the current leaderboard
+
+- **cancel_game**
+    - Path: 'cancel/{urlsafe_game_key}'
+    - Method: GET
+    - Parameters: urlsafe_game_key
     - Returns: StringMessage
-    - Description: Gets the average number of attempts remaining for all games
-    from a previously cached memcache key.
+    - Description: Cancel's a specified game, as long as it hasn't finished.
+
+- **get_user_rankings**
+    - Path: 'rank'
+    - Method: GET
+    - Parameters: None
+    - Returns: LeaderboardForms
+    - Description: Gets the current leaderboard
+
+- **get_game_history**
+    - Path: 'history/{urlsafe_game_key}'
+    - Method: GET
+    - Parameters: urlsafe_game_key
+    - Returns: GameHistoryForms
+    - Description: Gets the history of all the moves a single game.
 
 ##Models Included:
  - **User**
@@ -123,8 +142,11 @@ Player2: Guesses "TOGGLE" and loses
  - **Game**
     - Stores unique game states. Associated with User model via KeyProperty.
     
- - **Score**
-    - Records completed games. Associated with Users model via KeyProperty.
+ - **Leaderboard**
+    - Records completed games win / loss. Associated with Users model via KeyProperty.
+ 
+ - **GameHistory**
+    - Records each move that happens in a game associated to a game.
     
 ##Forms Included:
  - **GameForm**
@@ -141,3 +163,11 @@ Player2: Guesses "TOGGLE" and loses
     - Multiple ScoreForm container.
  - **StringMessage**
     - General purpose String container.
+ - **LeaderboardForms**
+    - Representation of a Game's current leaderboard.
+ - **LeaderboardForms**
+    - Multiple LeaderboardForm container.
+ - **GameHistoryForms**
+    - Representation of a Game's history.
+ - **GameHistoryForms**
+    - Multiple GameHistoryForm container.

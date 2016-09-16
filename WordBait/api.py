@@ -24,7 +24,6 @@ MAKE_MOVE_REQUEST = endpoints.ResourceContainer(
     urlsafe_game_key=messages.StringField(1),)
 USER_REQUEST = endpoints.ResourceContainer(user_name=messages.StringField(1),
                                            email=messages.StringField(2))
-GAME_URL = endpoints.ResourceContainer(urlsafe_game_key=messages.StringField(1))
 
 MEMCACHE_MOVES_REMAINING = 'MOVES_REMAINING'
 

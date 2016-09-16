@@ -1,6 +1,6 @@
 """utils.py - File for collecting general utility functions."""
 
-from models import User, Game, Score
+from models import User, Game
 import logging
 from google.appengine.ext import ndb
 import endpoints

@@ -141,6 +141,8 @@ class Game(ndb.Model):
     def make_move(self, word):
         """Makes a move"""
         # Advancing the round, updating the word, and updating the user
+        if self.target[::self.current_round] != word[::self.current_round]:
+            raise ValueError('Must match original characters from bait to make new word!')
         record = GameHistory(game=self.key, target=self.target, move=word, user=self.turn, final_guess=False, round=self.current_round)
         record.put()
         self.current_round += 1
@@ -190,17 +192,6 @@ class GameHistory(ndb.Model):
 
     def to_form(self):
         return GameHistoryForm(user=self.user.get().name, target=self.target, final_guess=self.final_guess, move=self.move, round=self.round)
-
-class Score(ndb.Model):
-    """Score object"""
-    winner = ndb.KeyProperty(required=True, kind='User')
-    loser = ndb.KeyProperty(required=True, kind='User')
-    date = ndb.DateProperty(required=True)
-    rounds = ndb.IntegerProperty(required=True)
-
-    def to_form(self):
-        return ScoreForm(winner_name=self.winner.get().name, loser_name=self.loser.get().name,
-                         date=str(self.date), rounds=self.rounds)
 
 class LeaderboardForm(messages.Message):
     """LeaderboardForm for outbound game Leaderboard information"""

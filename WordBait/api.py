@@ -11,7 +11,7 @@ from protorpc import remote, messages
 from google.appengine.api import memcache
 from google.appengine.api import taskqueue
 
-from models import User, Game, Score, GameHistory
+from models import User, Game, GameHistory
 from models import StringMessage, NewGameForm, GameForm, MakeMoveForm,\
     ScoreForms, GameForms, Leaderboard, LeaderboardForm, LeaderboardForms, GameHistoryForm, GameHistoryForms
 from utils import get_by_urlsafe, get_user
@@ -102,7 +102,10 @@ class WordBaitAPI(remote.Service):
         if request.final_guess:
             return game.end_game(user.key, request.word)
         else:
-            return game.make_move(request.word)
+            try:
+                return game.make_move(request.word)
+            except ValueError:
+                raise endpoints.BadRequestException('Must match original characters from bait to make new word!')
 
     @endpoints.method(response_message=ScoreForms,
                       path='scores',

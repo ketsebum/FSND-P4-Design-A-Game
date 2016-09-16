@@ -16,3 +16,13 @@ something else along those lines.
 
 I also had some issues when it came to properly forming the request / responses in forms. As this is a completely new area for how to handle it, I ran into a few property
 errors with expectations of Strings, Integers, or Booleans and trying to understand how to properly format it all.
+
+From a true design I really struggled thinking about how the database / NDB models should be organized. I went back and forth quite a bit over the idea of having theS
+Score table exist and not store the winner / loser information in the game. However, I found that it simplified my initial queries and thus decided to keep it that way.
+However, I feel if I were to continue developing this app, I would want to simplify the set of Models that I have currently to be a little more coherent.
+
+Truly the biggest issue that I spent a little more time on then I should have is implementing the dictionary function of this app. In order for this game to truly be good
+one would have to verify that the user is actually picking real words, and this can be done with the pyenchant library. However, the big caveat is that module does not
+work with the google appengine. This was very confusing for a very long time, until I realized that the issue was intentional because Google doesn't allow the C libraries
+to be used, as I assume a security issue with too much control. Unfortunately, I did not implement that aspect of the game, however it is still a fully functional game 
+otherwise.

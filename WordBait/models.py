@@ -39,7 +39,7 @@ class Game(ndb.Model):
     def new_game(cls, user_one, word):
         """Creates and returns a new game"""
         if len(word) < 4:
-            raise ValueError('Minimum word length must be greater than 4')
+            raise ValueError('Minimum word length must be greater than 3')
 
         # Use the dictionary to validate the words used
         # dictionary = enchant.Dict("en_US")
@@ -88,6 +88,7 @@ class Game(ndb.Model):
             return StringMessage(message="Game already finished, not able to cancel!")
         else:
             self.cancelled = True
+            self.game_over = True
             self.put()
             return StringMessage(message="Cancelled Successfully!")
 
@@ -168,7 +169,6 @@ class Leaderboard(ndb.Model):
     wins = ndb.IntegerProperty(required=True)
     losses = ndb.IntegerProperty(required=True)
 
-    @classmethod
     def adjust_record(self, adjustment):
         """Adjusts a users record"""
         if adjustment > 0:

@@ -23,7 +23,7 @@ class SendReminderEmail(webapp2.RequestHandler):
             mail.send_mail('noreply@{}.appspotmail.com'.format(app_id),
                            game.turn.get().email,
                            subject,
-                           body))
+                           body)
 
 
 class UpdateAverageMovesRemaining(webapp2.RequestHandler):

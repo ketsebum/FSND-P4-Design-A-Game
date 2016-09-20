@@ -39,17 +39,9 @@ Player2: Guesses "TOGGLE" and loses
 									FEATURES
 				--------------------------------------------
 - Players must enter word and submit in order for next letter to be displayed
-- Before word is displayed, must enable timer
-  - tap screen to see displayed letters?
-- Players get certain amount of time to complete round, time divided individually
-- Players can choose time limits?
-- turn based? Live game?
-- ability to challenge unguessed word
-  - limited challenges?
-  - does a challenge affect your score?
-- How many points per word?
-  - points based on difficulty?
-- enable/disable use of past, future, plural tenses
+- turn based
+- random matchmaking
+- ability to guess final word
 
 ##Files Included:
  - api.py: Contains endpoints and game playing logic.

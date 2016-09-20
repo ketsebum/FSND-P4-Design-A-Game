@@ -59,7 +59,7 @@ class WordBaitAPI(remote.Service):
         try:
             game = Game.new_game(user.key, request.word)
         except ValueError:
-            raise endpoints.BadRequestException('Minimum word length must be greater than 4!')
+            raise endpoints.BadRequestException('Minimum word length must be greater than 3!')
 
         # Use a task queue to update the average current_round remaining.
         # This operation is not needed to complete the creation of a new game
@@ -93,9 +93,9 @@ class WordBaitAPI(remote.Service):
 
         # Not valid attempts on the game
         if game.game_over:
-            return game.to_form('Game already over!')
+            raise endpoints.ForbiddenException('Illegal action: Game is already over.')
         if game.turn != user.key:
-            return game.to_form('Not your turn!')
+            raise endpoints.ForbiddenException('Illegal action: Not your turn.')
 
         # Checking Win Condition
         if request.final_guess:

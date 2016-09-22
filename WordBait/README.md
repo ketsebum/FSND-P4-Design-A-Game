@@ -39,9 +39,10 @@ Player2: Guesses "TOGGLE" and loses
 									FEATURES
 				--------------------------------------------
 - Players must enter word and submit in order for next letter to be displayed
-- turn based
-- random matchmaking
-- ability to guess final word
+- Must be final guess to end the game
+- Turn based
+- Random matchmaking
+- Scoring currently based on pure win / loss
 
 ##Files Included:
  - api.py: Contains endpoints and game playing logic.
@@ -112,13 +113,6 @@ Player2: Guesses "TOGGLE" and loses
     - Parameters: urlsafe_game_key
     - Returns: StringMessage
     - Description: Cancel's a specified game, as long as it hasn't finished.
-
-- **get_user_rankings**
-    - Path: 'rank'
-    - Method: GET
-    - Parameters: None
-    - Returns: LeaderboardForms
-    - Description: Gets the current leaderboard
 
 - **get_game_history**
     - Path: 'history/{urlsafe_game_key}'

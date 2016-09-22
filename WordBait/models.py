@@ -145,7 +145,7 @@ class Game(ndb.Model):
         """Makes a move"""
         # Advancing the round, updating the word, and updating the user
         # but verify if valid word
-        if self.target[::self.current_round] != word[::self.current_round]:
+        if self.target[:self.current_round] != word[:self.current_round]:
             raise ValueError('Must match original characters from bait to make new word!')
         record = GameHistory(game=self.key, target=self.target, move=word, user=self.turn, final_guess=False, round=self.current_round)
         record.put()
